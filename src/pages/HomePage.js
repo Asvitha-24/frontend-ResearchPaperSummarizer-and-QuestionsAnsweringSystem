@@ -42,11 +42,6 @@ const HomePage = () => {
     <div className="home-page">
       <Header />
       <main className="home-main">
-        <section className="hero-section">
-          <h2>Find and Summarize Research Papers</h2>
-          <p>Search for papers, get instant summaries, and ask questions to our AI assistant.</p>
-        </section>
-
         <section className="search-section">
           <SearchBar onSearch={handleSearch} isLoading={loading} />
         </section>

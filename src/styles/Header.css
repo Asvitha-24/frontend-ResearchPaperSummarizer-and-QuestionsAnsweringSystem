@@ -17,14 +17,80 @@
   align-items: center;
 }
 
-.logo {
-  text-decoration: none;
-  color: white;
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.logo h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
+.account-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.account-btn:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.account-icon {
+  font-size: 1.2rem;
+}
+
+.dropdown-arrow {
+  font-size: 0.7rem;
+}
+
+.logo-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-image {
+  width: 60px;
+  height: 60px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.logo:hover .logo-image {
+  transform: scale(1.05);
+}
+
+.logo-text-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.logo-text {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(120deg, #FFD700 0%, #FFC700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.logo-subtitle {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 400;
+  letter-spacing: 0.3px;
 }
 
 .nav {
@@ -41,6 +107,13 @@
 
 .nav a:hover {
   opacity: 0.8;
+}
+
+.logo {
+  text-decoration: none;
+  color: white;
+  display: flex;
+  align-items: center;
 }
 
 @media (max-width: 768px) {

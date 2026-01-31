@@ -29,14 +29,14 @@ const SearchBar = ({ onSearch, isLoading }) => {
       <form onSubmit={handleSubmit} className="search-form">
         <input
           type="text"
-          placeholder="Search for research papers..."
+          placeholder="Search 232,217,438 papers from all fields of science"
           value={query}
           onChange={handleChange}
           disabled={isLoading}
           className="search-input"
         />
         <button type="submit" disabled={isLoading} className="search-btn">
-          {isLoading ? 'Searching...' : 'Search'}
+          {isLoading ? '...' : '🔍 Search'}
         </button>
       </form>
       {error && <div className="search-error">{error}</div>}
