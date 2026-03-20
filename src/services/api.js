@@ -4,14 +4,17 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 60000,  // Increased to 60 seconds for heavy operations like summarization
 });
 
 // Add interceptor for error handling
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ API Response:', response.config.url, response.status);
+    return response;
+  },
   (error) => {
-    console.error('API Error:', error);
+    console.error('❌ API Error:', error.config?.url, error.message, error.response?.status);
     throw error;
   }
 );
@@ -76,19 +79,34 @@ export const deleteDocument = async (documentId) => {
 // ==================== SUMMARIZATION ====================
 
 /**
- * Generate summary for a document
+ * Generate summary for text content
+ * @param {string} text - The text to summarize
+ * @param {object} options - Options (maxLength, minLength)
  */
-export const generateSummary = async (documentId, options = {}) => {
+export const generateSummary = async (text, options = {}) => {
   try {
-    const response = await apiClient.post(`/summarize`, {
-      documentId,
-      maxLength: options.maxLength || 200,
-      minLength: options.minLength || 50,
-      style: options.style || 'abstractive',
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      throw new Error('Text content is required for summarization');
+    }
+
+    const payload = {
+      text: text.trim(),
+      max_length: options.maxLength || 150,
+      min_length: options.minLength || 50,
+    };
+
+    console.log('📤 Sending to /summarize:', { 
+      textLength: payload.text.length, 
+      maxLength: payload.max_length,
+      minLength: payload.min_length 
     });
+
+    const response = await apiClient.post(`/summarize`, payload);
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to generate summary');
+    const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to generate summary';
+    console.error('❌ Summary API error:', errorMsg);
+    throw new Error(errorMsg);
   }
 };
 

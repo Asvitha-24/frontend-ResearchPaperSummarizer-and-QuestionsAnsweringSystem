@@ -5,7 +5,11 @@ const appStore = (set) => ({
   // Documents
   documents: [],
   addDocument: (document) =>
-    set((state) => ({ documents: [...state.documents, document] })),
+    set((state) => {
+      // Keep only last 15 documents to prevent storage overflow
+      const newDocs = [...state.documents, document];
+      return { documents: newDocs.slice(-15) };
+    }),
   removeDocument: (id) =>
     set((state) => ({
       documents: state.documents.filter((d) => d.id !== id),
@@ -51,9 +55,11 @@ const appStore = (set) => ({
   // User History
   history: [],
   addToHistory: (item) =>
-    set((state) => ({
-      history: [{ ...item, timestamp: new Date().toISOString() }, ...state.history],
-    })),
+    set((state) => {
+      // Keep only last 10 entries to prevent localStorage overflow
+      const newHistory = [{ ...item, timestamp: new Date().toISOString() }, ...state.history];
+      return { history: newHistory.slice(0, 10) };
+    }),
   deleteFromHistory: (id) =>
     set((state) => ({
       history: state.history.filter((h) => h.id !== id),
@@ -102,6 +108,18 @@ const appStore = (set) => ({
       selectedPaper: null,
       currentDocument: null,
     }),
+
+  // Clear old localStorage data
+  clearOldStorageData: () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.clear();
+        console.log('✅ Old storage cleared');
+      } catch (e) {
+        console.error('Failed to clear storage:', e);
+      }
+    }
+  },
 });
 
 export const useAppStore = create(
