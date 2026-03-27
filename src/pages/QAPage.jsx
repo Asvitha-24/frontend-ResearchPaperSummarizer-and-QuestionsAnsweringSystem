@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/appStore';
 import { askQuestion } from '../services/api';
+
+// Note: Using the renamed function for clarity
+// This will call the backend /api/answer endpoint with question and context
 import { Card, Button, Spinner, Alert, FormGroup } from '../components/UI';
 import { QAInterface, AnswerDisplay } from '../components/SpecializedComponents';
 
@@ -10,49 +13,64 @@ const QAPage = () => {
   const [qaHistory, setQAHistory] = useState([]);
   const [error, setError] = useState(null);
 
-  const handleAskQuestion = async (question, documentId, context) => {
+  const handleAskQuestion = async (question, documentId, contextType) => {
     if (!question.trim()) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      // In a real app, call the API
-      // const result = await askQuestion(documentId, question, context);
+      // Get document content from the documents list
+      const doc = documents.find(d => d.id === documentId);
+      if (!doc) {
+        throw new Error('Document not found. Please select a valid document.');
+      }
+      
+      // Use the document content or extracted text
+      const documentContent = doc.extracted_text || doc.content || doc.text || '';
+      if (!documentContent || documentContent.trim().length === 0) {
+        throw new Error('Document content is empty. Please upload and process a document first.');
+      }
 
-      // Mock response
-      const mockAnswer = {
+      console.log('🔍 Calling API with question and context...');
+      
+      // Call the real API with proper parameters
+      const result = await askQuestion(documentId, question, documentContent);
+
+      // Parse the API response
+      const answerData = {
         id: Date.now().toString(),
         question,
-        answer: `This is a placeholder answer to your question: "${question}". 
-          In a production environment, the AI model would analyze the document 
-          and provide a detailed, accurate answer based on the content.`,
-        confidence: 87,
-        processingTime: 1.2,
-        location: { page: 5, position: 'middle' },
-        context,
+        answer: result.answer || result.full_result?.answer || 'No answer found',
+        confidence: Math.round((result.score || 0) * 100),
+        processingTime: result.processingTime || 1.2,
+        location: result.location || { page: 0, position: 'unknown' },
+        context: documentContent,
         documentId,
       };
 
-      setAnswer(mockAnswer);
-      setQAHistory((prev) => [mockAnswer, ...prev]);
+      console.log('✅ Got answer:', answerData);
+
+      setAnswer(answerData);
+      setQAHistory((prev) => [answerData, ...prev]);
 
       addQAResult({
-        id: mockAnswer.id,
+        id: answerData.id,
         question,
-        answer: mockAnswer.answer,
-        confidence: mockAnswer.confidence,
+        answer: answerData.answer,
+        confidence: answerData.confidence,
         documentId,
       });
 
       addToHistory({
-        id: mockAnswer.id,
+        id: answerData.id,
         type: 'qa',
         query: question,
         status: 'success',
       });
     } catch (err) {
-      setError(err.message);
+      console.error('❌ Error in QA:', err);
+      setError(err.message || 'Failed to get answer. Please try again.');
     } finally {
       setLoading(false);
     }

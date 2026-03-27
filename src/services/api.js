@@ -125,18 +125,62 @@ export const getSummary = async (documentId) => {
 // ==================== QUESTION ANSWERING ====================
 
 /**
- * Ask a question about a document
+ * Ask a question about document content
+ * @param {string} question - The question to ask
+ * @param {string} context - The document content/context to answer from
  */
-export const askQuestion = async (documentId, question, useContext = 'full') => {
+export const askQuestionAboutContent = async (question, context) => {
   try {
-    const response = await apiClient.post(`/question-answer`, {
-      documentId,
-      question,
-      context: useContext, // 'full' or 'summary'
+    if (!question || typeof question !== 'string' || question.trim().length === 0) {
+      throw new Error('Question is required');
+    }
+    if (!context || typeof context !== 'string' || context.trim().length === 0) {
+      throw new Error('Document context is required');
+    }
+
+    console.log('📤 Asking question to /answer endpoint:', {
+      questionLength: question.length,
+      contextLength: context.length,
+    });
+
+    const response = await apiClient.post(`/answer`, {
+      question: question.trim(),
+      context: context.trim(),
     });
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to answer question');
+    const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to answer question';
+    console.error('❌ Q&A API error:', errorMsg);
+    throw new Error(errorMsg);
+  }
+};
+
+/**
+ * Ask a question about a document using the /answer endpoint
+ */
+export const askQuestion = async (documentId, question, documentContent) => {
+  try {
+    if (!question || typeof question !== 'string' || question.trim().length === 0) {
+      throw new Error('Question is required');
+    }
+    if (!documentContent || typeof documentContent !== 'string' || documentContent.trim().length === 0) {
+      throw new Error('Document content is required');
+    }
+
+    console.log('📤 Calling /answer endpoint:', {
+      questionLength: question.length,
+      contentLength: documentContent.length,
+    });
+
+    const response = await apiClient.post(`/answer`, {
+      question: question.trim(),
+      context: documentContent.trim(),
+    });
+    return response.data;
+  } catch (error) {
+    const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to answer question';
+    console.error('❌ Q&A API error:', errorMsg);
+    throw new Error(errorMsg);
   }
 };
 

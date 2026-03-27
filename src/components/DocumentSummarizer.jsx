@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useAppStore } from '../store/appStore';
 
 /**
  * Document Summarizer Component
@@ -12,6 +13,7 @@ import React, { useState, useRef } from 'react';
  * Uses the new /api/summarize-file endpoint
  */
 export function DocumentSummarizer() {
+  const { addDocument } = useAppStore();
   const [summary, setSummary] = useState('');
   const [extractedText, setExtractedText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -73,7 +75,26 @@ export function DocumentSummarizer() {
         compressionRatio: result.compression_ratio
       });
 
-      setSuccess(`✓ Successfully summarized "${file.name}"`);
+      // Step 6: Save document to app store for Q&A
+      const newDocument = {
+        id: Date.now().toString(),
+        title: file.name,
+        name: file.name,
+        filename: file.name,
+        fileType: result.file_type || 'unknown',
+        extracted_text: result.extracted_text,
+        content: result.extracted_text, // Also set as 'content' for compatibility
+        text: result.extracted_text, // Also set as 'text' for compatibility
+        summary: result.summary,
+        uploadedAt: new Date().toISOString(),
+        originalLength: result.original_length,
+        summaryLength: result.summary_length,
+      };
+
+      console.log('💾 Saving document to store:', newDocument.id);
+      addDocument(newDocument);
+
+      setSuccess(`✓ Successfully summarized and saved "${file.name}"`);
 
     } catch (err) {
       console.error('❌ Error:', err);
