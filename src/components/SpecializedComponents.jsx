@@ -187,11 +187,16 @@ export const QAInterface = ({ onAskQuestion, loading = false, documents = [] }) 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (question.trim()) {
+    if (question.trim() && selectedDoc) {
       onAskQuestion(question, selectedDoc, context);
       setQuestion('');
     }
   };
+
+  // **LOOPHOLE FIX #4: Check if selected document has content**
+  const selectedDocument = documents.find(d => d.id === selectedDoc);
+  const selectedDocHasContent = selectedDocument && (selectedDocument.extracted_text || selectedDocument.content || selectedDocument.text);
+  const isButtonDisabled = !question.trim() || !selectedDocHasContent || loading;
 
   return (
     <Card>
@@ -203,17 +208,29 @@ export const QAInterface = ({ onAskQuestion, loading = false, documents = [] }) 
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Select Document
             </label>
-            <select
-              value={selectedDoc}
-              onChange={(e) => setSelectedDoc(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md"
-            >
-              {documents.map((doc) => (
-                <option key={doc.id} value={doc.id}>
-                  {doc.title || doc.name || 'Untitled'}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-2">
+              <select
+                value={selectedDoc}
+                onChange={(e) => setSelectedDoc(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md"
+              >
+                {documents.map((doc) => {
+                  const hasContent = doc.extracted_text || doc.content || doc.text;
+                  const contentLength = (hasContent?.length || 0);
+                  const status = hasContent ? `✅ (${contentLength} chars)` : '❌ (No content)';
+                  return (
+                    <option key={doc.id} value={doc.id}>
+                      {(doc.title || doc.name || 'Untitled')} {status}
+                    </option>
+                  );
+                })}
+              </select>
+              {!selectedDocHasContent && selectedDocument && (
+                <div className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
+                  ⚠️ Document "{selectedDocument.name}" has no content. Cannot ask questions.
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -251,7 +268,7 @@ export const QAInterface = ({ onAskQuestion, loading = false, documents = [] }) 
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="What would you like to know about the document?"
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -260,7 +277,8 @@ export const QAInterface = ({ onAskQuestion, loading = false, documents = [] }) 
           variant="primary"
           fullWidth
           loading={loading}
-          disabled={!question.trim()}
+          disabled={isButtonDisabled}
+          title={isButtonDisabled && !question.trim() ? 'Please enter a question' : isButtonDisabled ? 'Selected document has no content' : ''}
         >
           Ask Question
         </Button>

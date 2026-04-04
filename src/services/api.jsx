@@ -109,12 +109,11 @@ export const getSummary = async (documentId) => {
 /**
  * Ask a question about a document
  */
-export const askQuestion = async (documentId, question, useContext = 'full') => {
+export const askQuestion = async (documentId, question, documentContent) => {
   try {
-    const response = await apiClient.post(`/question-answer`, {
-      documentId,
+    const response = await apiClient.post(`/answer`, {
       question,
-      context: useContext, // 'full' or 'summary'
+      context: documentContent,
     });
     return response.data;
   } catch (error) {

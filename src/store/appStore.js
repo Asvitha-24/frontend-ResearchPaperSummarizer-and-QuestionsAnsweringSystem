@@ -127,13 +127,27 @@ export const useAppStore = create(
     persist(appStore, {
       name: 'app-storage',
       partialize: (state) => ({
-        documents: state.documents,
-        history: state.history,
-        savedResults: state.savedResults,
+        documents: state.documents.map(doc => ({
+          // Exclude large text fields from persistence
+          id: doc.id,
+          title: doc.title,
+          name: doc.name,
+          filename: doc.filename,
+          fileType: doc.fileType,
+          extracted_text_preview: doc.extracted_text_preview,
+          summary: doc.summary,
+          uploadedAt: doc.uploadedAt,
+          originalLength: doc.originalLength,
+          summaryLength: doc.summaryLength,
+          textTruncated: doc.textTruncated,
+        })),
+        history: state.history.slice(0, 10), // Limit history to 10 items
+        savedResults: state.savedResults.slice(0, 20), // Limit saved results to 20 items
         preferences: state.preferences,
         summaries: state.summaries,
-        qaResults: state.qaResults,
+        qaResults: state.qaResults.slice(0, 30), // Limit QA results
       }),
+      version: 1, // Cache version for migrations
     })
   )
 );

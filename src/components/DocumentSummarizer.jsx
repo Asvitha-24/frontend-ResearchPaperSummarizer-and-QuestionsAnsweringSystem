@@ -75,30 +75,52 @@ export function DocumentSummarizer() {
         compressionRatio: result.compression_ratio
       });
 
-      // Step 6: Save document to app store for Q&A
+      // Step 6: Save document to app store for Q&A (but truncate extracted_text to prevent localStorage overflow)
+      // CRITICAL: Do NOT store full extracted_text in localStorage (could be 50KB+, exceeds quota)
+      // Only store a preview (first 500 chars) and the summary
       const newDocument = {
         id: Date.now().toString(),
         title: file.name,
         name: file.name,
         filename: file.name,
         fileType: result.file_type || 'unknown',
-        extracted_text: result.extracted_text,
-        content: result.extracted_text, // Also set as 'content' for compatibility
-        text: result.extracted_text, // Also set as 'text' for compatibility
+        extracted_text_preview: result.extracted_text.substring(0, 500), // Only preview, not full text
+        content: result.extracted_text.substring(0, 500), // Only preview for localStorage
+        text: result.extracted_text.substring(0, 500), // Only preview for localStorage
         summary: result.summary,
         uploadedAt: new Date().toISOString(),
         originalLength: result.original_length,
         summaryLength: result.summary_length,
+        textTruncated: result.extracted_text_truncated || false,
       };
 
       console.log('💾 Saving document to store:', newDocument.id);
-      addDocument(newDocument);
-
-      setSuccess(`✓ Successfully summarized and saved "${file.name}"`);
+      try {
+        addDocument(newDocument);
+        setSuccess(`✓ Successfully summarized and saved "${file.name}"`);
+      } catch (storageErr) {
+        // If storage fails, still show success but warn about storage
+        console.warn('⚠️ Failed to save to store:', storageErr);
+        setSuccess(`✓ Successfully summarized "${file.name}" (note: could not save to history due to storage limits)`);
+      }
 
     } catch (err) {
       console.error('❌ Error:', err);
-      setError(`Error: ${err.message}`);
+      
+      // Handle specific storage quota error
+      if (err.name === 'QuotaExceededError' || err.code === 22) {
+        setError('Storage quota exceeded. Please clear your history or cache and try again.');
+        // Clear old localStorage data
+        try {
+          localStorage.removeItem('app-storage');
+          console.log('✅ Cleared app-storage. Please try uploading again.');
+        } catch (clearErr) {
+          console.error('Failed to clear storage:', clearErr);
+        }
+      } else {
+        setError(`Error: ${err.message}`);
+      }
+      
       setSummary('');
       setExtractedText('');
     } finally {

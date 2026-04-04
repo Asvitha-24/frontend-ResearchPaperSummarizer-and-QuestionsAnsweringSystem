@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store/appStore';
 import { askQuestion } from '../services/api';
 
@@ -8,10 +8,37 @@ import { Card, Button, Spinner, Alert, FormGroup } from '../components/UI';
 import { QAInterface, AnswerDisplay } from '../components/SpecializedComponents';
 
 const QAPage = () => {
-  const { documents, currentDocument, setCurrentDocument, addQAResult, addToHistory, loading, setLoading } = useAppStore();
+  const { documents, currentDocument, setCurrentDocument, addQAResult, addToHistory, loading, setLoading, addDocument } = useAppStore();
   const [answer, setAnswer] = useState(null);
   const [qaHistory, setQAHistory] = useState([]);
   const [error, setError] = useState(null);
+
+  // Load sample document if no documents exist
+  useEffect(() => {
+    if (documents.length === 0) {
+      console.log('📄 Loading sample document for testing...');
+      const sampleDoc = {
+        id: 'sample-1',
+        name: 'RP 01.pdf',
+        title: 'RP 01.pdf',
+        extracted_text: `Paris is the capital and largest city of France. It is located in the north-central part of the country along the Seine River. Paris has been a major center of human activity and commerce for nearly 2,000 years. It is a leading global city with strengths in art, fashion, gastronomy, education, and culture. 
+
+The city is famous for the Eiffel Tower, one of the most recognized monuments in the world. Other notable landmarks include Notre-Dame Cathedral, the Louvre Museum, and the Arc de Triomphe. Paris is known for its romantic ambiance and is often called the "City of Love."
+
+Machine learning is a subset of artificial intelligence (AI) that enables systems to learn and improve from experience without being explicitly programmed. It focuses on developing computer programs that can access data and use it to learn for themselves.
+
+There are three main types of machine learning: supervised learning, unsupervised learning, and reinforcement learning. Supervised learning involves training on labeled data. Unsupervised learning finds patterns in unlabeled data. Reinforcement learning trains agents to make decisions through rewards and penalties.
+
+Machine learning applications include image recognition, natural language processing, recommendation systems, autonomous vehicles, and medical diagnosis. The field is rapidly evolving with advances in deep learning and neural networks.`,
+        type: 'pdf',
+        uploadDate: new Date().toISOString(),
+        size: '1.2 MB',
+      };
+      
+      addDocument(sampleDoc);
+      console.log('✅ Sample document loaded');
+    }
+  }, [documents.length, addDocument]);
 
   const handleAskQuestion = async (question, documentId, contextType) => {
     if (!question.trim()) return;
@@ -23,19 +50,44 @@ const QAPage = () => {
       // Get document content from the documents list
       const doc = documents.find(d => d.id === documentId);
       if (!doc) {
-        throw new Error('Document not found. Please select a valid document.');
+        throw new Error('❌ Document not found. Please select a valid document from the list.');
       }
       
       // Use the document content or extracted text
       const documentContent = doc.extracted_text || doc.content || doc.text || '';
+      
+      // **LOOPHOLE FIX #1: Better document validation**
       if (!documentContent || documentContent.trim().length === 0) {
-        throw new Error('Document content is empty. Please upload and process a document first.');
+        console.error('Document validation failed:', {
+          docId: doc.id,
+          docName: doc.name,
+          hasExtractedText: !!doc.extracted_text,
+          hasContent: !!doc.content,
+          hasText: !!doc.text,
+          contentLength: documentContent.length
+        });
+        throw new Error(`📄 Document "${doc.name}" has no content. Please upload a document with text content first.`);
       }
 
-      console.log('🔍 Calling API with question and context...');
+      console.log('🔍 Calling API with question and context...', {
+        question: question.substring(0, 50),
+        contextLength: documentContent.length,
+        docId: documentId
+      });
       
       // Call the real API with proper parameters
-      const result = await askQuestion(documentId, question, documentContent);
+      let result;
+      try {
+        result = await askQuestion(documentId, question, documentContent);
+      } catch (apiError) {
+        // **LOOPHOLE FIX #2: Show specific API errors**
+        console.error('API Error details:', {
+          status: apiError.response?.status,
+          message: apiError.message,
+          data: apiError.response?.data
+        });
+        throw new Error(`🔌 API Error: ${apiError.message}`);
+      }
 
       // Parse the API response
       const answerData = {
@@ -70,7 +122,7 @@ const QAPage = () => {
       });
     } catch (err) {
       console.error('❌ Error in QA:', err);
-      setError(err.message || 'Failed to get answer. Please try again.');
+      setError(err.message || 'Failed to get answer. Please check console for details.');
     } finally {
       setLoading(false);
     }
@@ -79,12 +131,81 @@ const QAPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Ask Questions</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Get instant answers from your research papers using AI
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Ask Questions</h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Get instant answers from your research papers using AI
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {documents.length === 0 && (
+            <Button
+              onClick={() => {
+                const sampleDoc = {
+                  id: 'sample-1',
+                  name: 'RP 01.pdf',
+                  title: 'RP 01.pdf',
+                  extracted_text: `Paris is the capital and largest city of France. It is located in the north-central part of the country along the Seine River. Paris has been a major center of human activity and commerce for nearly 2,000 years. It is a leading global city with strengths in art, fashion, gastronomy, education, and culture. 
+
+The city is famous for the Eiffel Tower, one of the most recognized monuments in the world. Other notable landmarks include Notre-Dame Cathedral, the Louvre Museum, and the Arc de Triomphe. Paris is known for its romantic ambiance and is often called the "City of Love."
+
+Machine learning is a subset of artificial intelligence (AI) that enables systems to learn and improve from experience without being explicitly programmed. It focuses on developing computer programs that can access data and use it to learn for themselves.
+
+There are three main types of machine learning: supervised learning, unsupervised learning, and reinforcement learning. Supervised learning involves training on labeled data. Unsupervised learning finds patterns in unlabeled data. Reinforcement learning trains agents to make decisions through rewards and penalties.
+
+Machine learning applications include image recognition, natural language processing, recommendation systems, autonomous vehicles, and medical diagnosis. The field is rapidly evolving with advances in deep learning and neural networks.`,
+                  type: 'pdf',
+                  uploadDate: new Date().toISOString(),
+                  size: '1.2 MB',
+                };
+                addDocument(sampleDoc);
+              }}
+              variant="outline"
+              size="sm"
+            >
+              📄 Load Sample Document
+            </Button>
+          )}
+          {documents.length > 0 && (
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              <span>📚 {documents.length} document(s) loaded</span>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Documents Status **LOOPHOLE FIX #3** */}
+      {documents.length > 0 && (
+        <Card className="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-500">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">📊 Document Status</h3>
+              <div className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
+                {documents.map((doc) => {
+                  const hasContent = doc.extracted_text || doc.content || doc.text;
+                  const contentLength = (hasContent?.length || 0);
+                  return (
+                    <div key={doc.id} className="flex items-center gap-2">
+                      {hasContent ? (
+                        <>
+                          <span className="text-green-600 dark:text-green-400">✅</span>
+                          <span>{doc.name}: {contentLength} chars</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-red-600 dark:text-red-400">❌</span>
+                          <span>{doc.name}: No content</span>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Alerts */}
       {error && (
