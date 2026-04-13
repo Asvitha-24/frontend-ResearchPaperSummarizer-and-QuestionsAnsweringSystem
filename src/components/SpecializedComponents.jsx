@@ -183,12 +183,11 @@ export const SummaryDisplay = ({ summary, originalText, metrics, onCopy, onDownl
 export const QAInterface = ({ onAskQuestion, loading = false, documents = [] }) => {
   const [question, setQuestion] = React.useState('');
   const [selectedDoc, setSelectedDoc] = React.useState(documents[0]?.id || '');
-  const [context, setContext] = React.useState('full');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (question.trim() && selectedDoc) {
-      onAskQuestion(question, selectedDoc, context);
+      onAskQuestion(question, selectedDoc);
       setQuestion('');
     }
   };
@@ -233,30 +232,6 @@ export const QAInterface = ({ onAskQuestion, loading = false, documents = [] }) 
             </div>
           </div>
         )}
-
-        {/* Context Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Search In
-          </label>
-          <div className="flex gap-4">
-            {['full', 'summary'].map((opt) => (
-              <label key={opt} className="flex items-center">
-                <input
-                  type="radio"
-                  name="context"
-                  value={opt}
-                  checked={context === opt}
-                  onChange={(e) => setContext(e.target.value)}
-                  className="mr-2"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {opt === 'full' ? 'Full Document' : 'Summary Only'}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
 
         {/* Question Input */}
         <div>

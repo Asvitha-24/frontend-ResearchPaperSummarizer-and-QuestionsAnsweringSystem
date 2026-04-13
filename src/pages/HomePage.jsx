@@ -9,7 +9,6 @@ const HomePage = () => {
     totalDocuments: 0,
     totalSummaries: 0,
     totalQuestions: 0,
-    totalSearches: 0,
   });
 
   useEffect(() => {
@@ -17,7 +16,6 @@ const HomePage = () => {
       totalDocuments: documents.length,
       totalSummaries: Object.keys(summaries).length,
       totalQuestions: qaResults.length,
-      totalSearches: history.filter((h) => h.type === 'search').length,
     });
   }, [documents, summaries, qaResults, history]);
 
@@ -28,13 +26,6 @@ const HomePage = () => {
       description: 'Generate concise summaries of research papers with customizable length',
       path: '/upload',
       color: 'blue',
-    },
-    {
-      icon: '🔍',
-      title: 'Search Documents',
-      description: 'Find relevant papers with advanced filtering and ranking',
-      path: '/search',
-      color: 'purple',
     },
     {
       icon: '❓',
@@ -57,13 +48,9 @@ const HomePage = () => {
   return (
     <div className="space-y-12">
       {/* Hero Section */}
-      <section className="text-center py-8">
-        <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
-          📚 Research Paper Summarizer & QA System
-        </h1>
-        <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-3xl mx-auto">
-          Upload research papers, generate intelligent summaries, ask questions, and discover related documents.
-          All powered by advanced AI and natural language processing.
+      <section className="text-center py-12">
+        <p className="text-4xl font-bold text-gray-900 dark:text-white mb-8 max-w-3xl mx-auto leading-relaxed">
+          Upload research papers, generate intelligent summaries, ask questions
         </p>
         <div className="flex gap-4 justify-center flex-wrap">
           <Link to="/upload">
@@ -99,12 +86,6 @@ const HomePage = () => {
             <div className="text-4xl mb-2">❓</div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalQuestions}</p>
             <p className="text-sm text-gray-600 dark:text-gray-400">Questions</p>
-          </Card>
-
-          <Card className="bg-orange-50 dark:bg-orange-900 border border-orange-200 dark:border-orange-800">
-            <div className="text-4xl mb-2">🔍</div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalSearches}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Searches</p>
           </Card>
         </div>
       </section>

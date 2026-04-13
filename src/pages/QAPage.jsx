@@ -175,38 +175,6 @@ Machine learning applications include image recognition, natural language proces
         </div>
       </div>
 
-      {/* Documents Status **LOOPHOLE FIX #3** */}
-      {documents.length > 0 && (
-        <Card className="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-500">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">📊 Document Status</h3>
-              <div className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
-                {documents.map((doc) => {
-                  const hasContent = doc.extracted_text || doc.content || doc.text;
-                  const contentLength = (hasContent?.length || 0);
-                  return (
-                    <div key={doc.id} className="flex items-center gap-2">
-                      {hasContent ? (
-                        <>
-                          <span className="text-green-600 dark:text-green-400">✅</span>
-                          <span>{doc.name}: {contentLength} chars</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-red-600 dark:text-red-400">❌</span>
-                          <span>{doc.name}: No content</span>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-
       {/* Alerts */}
       {error && (
         <Alert

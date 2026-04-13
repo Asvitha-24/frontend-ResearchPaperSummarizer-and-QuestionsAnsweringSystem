@@ -26,6 +26,11 @@ const SearchBar = ({ onSearch, isLoading }) => {
 
   return (
     <div className="search-bar-container">
+      <div className="mb-6">
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
+          Upload research papers, generate intelligent summaries and ask questions
+        </h1>
+      </div>
       <form onSubmit={handleSubmit} className="search-form">
         <input
           type="text"
