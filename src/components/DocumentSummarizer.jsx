@@ -435,12 +435,7 @@ export function DocumentSummarizer() {
             >
               📄 Summary
             </button>
-            <button 
-              className={`tab ${activeTab === 'extracted' ? 'active' : ''}`}
-              onClick={() => setActiveTab('extracted')}
-            >
-              📋 Extracted Text
-            </button>
+
           </div>
 
           <div className={`tab-content summary ${activeTab === 'summary' ? 'active' : ''}`}>
@@ -448,15 +443,6 @@ export function DocumentSummarizer() {
               <div className="text-title">✅ BART Generated Summary</div>
               <div className="text-content">
                 {summary}
-              </div>
-            </div>
-          </div>
-
-          <div className={`tab-content extracted ${activeTab === 'extracted' ? 'active' : ''}`}>
-            <div className="text-box">
-              <div className="text-title">📋 Original Extracted Text</div>
-              <div className="text-content">
-                {extractedText}
               </div>
             </div>
           </div>

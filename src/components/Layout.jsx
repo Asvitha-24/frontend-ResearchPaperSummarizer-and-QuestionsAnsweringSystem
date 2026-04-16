@@ -22,14 +22,6 @@ export const Navbar = ({ onThemeToggle, isDarkMode }) => {
 
           {/* Right Section */}
           <div className="flex items-center space-x-4">
-            {/* Theme Toggle */}
-            <button
-              onClick={onThemeToggle}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Toggle theme"
-            >
-              {isDarkMode ? '☀️' : '🌙'}
-            </button>
           </div>
         </div>
       </div>
@@ -47,7 +39,6 @@ export const Sidebar = ({ isOpen, onClose }) => {
     { label: '🏠 Home', path: '/' },
     { label: '📤 Upload & Summarize', path: '/upload' },
     { label: '❓ Ask Questions', path: '/qa' },
-    { label: '📋 History', path: '/history' },
   ];
 
   return (
@@ -89,56 +80,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
   );
 };
 
-/**
- * Footer Component
- */
-export const Footer = () => {
-  const currentYear = new Date().getFullYear();
 
-  return (
-    <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          {/* About */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase">About</h3>
-            <ul className="mt-4 space-y-2">
-              <li><a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">About Us</a></li>
-              <li><a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Blog</a></li>
-              <li><a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Contact</a></li>
-            </ul>
-          </div>
-
-          {/* Features */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase">Features</h3>
-            <ul className="mt-4 space-y-2">
-              <li><a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Summarization</a></li>
-              <li><a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Q&A</a></li>
-              <li><a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Search</a></li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase">Legal</h3>
-            <ul className="mt-4 space-y-2">
-              <li><a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Privacy Policy</a></li>
-              <li><a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Terms of Service</a></li>
-              <li><a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Cookie Policy</a></li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-            © {currentYear} ResearchAI. All rights reserved.
-          </p>
-        </div>
-      </div>
-    </footer>
-  );
-};
 
 /**
  * Layout Wrapper Component
@@ -157,7 +99,6 @@ export const Layout = ({ children, onThemeToggle, isDarkMode }) => {
           </div>
         </main>
       </div>
-      <Footer />
     </div>
   );
 };
