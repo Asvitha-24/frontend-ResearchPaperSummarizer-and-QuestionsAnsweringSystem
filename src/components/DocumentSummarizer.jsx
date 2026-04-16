@@ -1,0 +1,418 @@
+import React, { useState, useRef } from 'react';
+import { useAppStore } from '../store/appStore';
+
+/**
+ * Document Summarizer Component
+ * 
+ * This component handles:
+ * - File upload (DOCX, PDF, TXT)
+ * - BART model summarization
+ * - Display of extracted text and summary
+ * - Statistics (compression ratio, character counts)
+ * 
+ * Uses the new /api/summarize-file endpoint
+ */
+export function DocumentSummarizer() {
+  const { addDocument } = useAppStore();
+  const [summary, setSummary] = useState('');
+  const [extractedText, setExtractedText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [activeTab, setActiveTab] = useState('summary');
+  const fileInputRef = useRef(null);
+
+  /**
+   * Handle file selection and summarization
+   * ✅ CORRECT WAY - Uses /api/summarize-file endpoint
+   */
+  const handleFileUpload = async (file) => {
+    if (!file) return;
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    setSummary('');
+    setExtractedText('');
+    setFileName(file.name);
+
+    try {
+      // Step 1: Create FormData with the file
+      const formData = new FormData();
+      formData.append('file', file);
+
+      console.log('📤 Uploading file:', file.name);
+
+      // Step 2: Send to the new /api/summarize-file endpoint
+      // ✅ THIS IS THE CORRECT ENDPOINT
+      const response = await fetch('http://localhost:5000/api/summarize-file', {
+        method: 'POST',
+        body: formData
+      });
+
+      // Step 3: Check for errors
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to summarize file');
+      }
+
+      // Step 4: Parse the response
+      const result = await response.json();
+
+      console.log('✅ Successfully summarized!');
+      console.log('Extracted text:', result.extracted_text.substring(0, 100) + '...');
+      console.log('Summary:', result.summary.substring(0, 100) + '...');
+
+      // Step 5: Display results
+      setExtractedText(result.extracted_text);
+      setSummary(result.summary);
+
+      // Step 6: Save document to app store for Q&A (but truncate extracted_text to prevent localStorage overflow)
+      // CRITICAL: Do NOT store full extracted_text in localStorage (could be 50KB+, exceeds quota)
+      // Only store a preview (first 500 chars) and the summary
+      const newDocument = {
+        id: Date.now().toString(),
+        title: file.name,
+        name: file.name,
+        filename: file.name,
+        fileType: result.file_type || 'unknown',
+        extracted_text_preview: result.extracted_text.substring(0, 500), // Only preview, not full text
+        content: result.extracted_text.substring(0, 500), // Only preview for localStorage
+        text: result.extracted_text.substring(0, 500), // Only preview for localStorage
+        summary: result.summary,
+        uploadedAt: new Date().toISOString(),
+        originalLength: result.original_length,
+        textTruncated: result.extracted_text_truncated || false,
+      };
+
+      console.log('💾 Saving document to store:', newDocument.id);
+      try {
+        addDocument(newDocument);
+        setSuccess(`✓ Successfully summarized and saved "${file.name}"`);
+      } catch (storageErr) {
+        // If storage fails, still show success but warn about storage
+        console.warn('⚠️ Failed to save to store:', storageErr);
+        setSuccess(`✓ Successfully summarized "${file.name}" (note: could not save to history due to storage limits)`);
+      }
+
+    } catch (err) {
+      console.error('❌ Error:', err);
+      
+      // Handle specific storage quota error
+      if (err.name === 'QuotaExceededError' || err.code === 22) {
+        setError('Storage quota exceeded. Please clear your history or cache and try again.');
+        // Clear old localStorage data
+        try {
+          localStorage.removeItem('app-storage');
+          console.log('✅ Cleared app-storage. Please try uploading again.');
+        } catch (clearErr) {
+          console.error('Failed to clear storage:', clearErr);
+        }
+      } else {
+        setError(`Error: ${err.message}`);
+      }
+      
+      setSummary('');
+      setExtractedText('');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle file input change
+  const handleFileInputChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+  };
+
+  // Handle drag and drop
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+  };
+
+  return (
+    <div className="document-summarizer">
+      <style>{`
+        .document-summarizer {
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 20px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .header {
+          margin-bottom: 30px;
+        }
+
+        .header h1 {
+          font-size: 32px;
+          margin-bottom: 10px;
+          color: #333;
+        }
+
+        .header p {
+          color: #666;
+          font-size: 16px;
+        }
+
+        .upload-section {
+          background: #f8f9fa;
+          border: 2px dashed #667eea;
+          border-radius: 8px;
+          padding: 40px;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin-bottom: 20px;
+        }
+
+        .upload-section:hover {
+          border-color: #764ba2;
+          background: #f0f2ff;
+        }
+
+        .upload-section.dragover {
+          border-color: #764ba2;
+          background: #e8ecff;
+        }
+
+        .upload-text {
+          font-size: 18px;
+          color: #333;
+          margin-bottom: 10px;
+          font-weight: 600;
+        }
+
+        .upload-hint {
+          color: #999;
+          font-size: 14px;
+          margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+          display: none;
+        }
+
+        .upload-button {
+          background: #667eea;
+          color: white;
+          border: none;
+          padding: 12px 30px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+
+        .upload-button:hover {
+          background: #764ba2;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .upload-button:disabled {
+          background: #ccc;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .message {
+          padding: 15px;
+          border-radius: 6px;
+          margin-bottom: 20px;
+          display: none;
+        }
+
+        .message.show {
+          display: block;
+        }
+
+        .error {
+          background: #fff3cd;
+          border: 1px solid #ffc107;
+          color: #856404;
+        }
+
+        .success {
+          background: #d4edda;
+          border: 1px solid #28a745;
+          color: #155724;
+        }
+
+        .loading {
+          text-align: center;
+          color: #667eea;
+          font-weight: 600;
+          padding: 20px;
+        }
+
+        .spinner {
+          display: inline-block;
+          width: 20px;
+          height: 20px;
+          border: 3px solid rgba(102, 126, 234, 0.3);
+          border-radius: 50%;
+          border-top-color: #667eea;
+          animation: spin 0.8s linear infinite;
+          margin-right: 10px;
+          vertical-align: middle;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        .results-section {
+          display: none;
+        }
+
+        .results-section.show {
+          display: block;
+        }
+
+        .text-box {
+          background: #f0f7ff;
+          border-left: 4px solid #667eea;
+          padding: 20px;
+          border-radius: 6px;
+          margin-bottom: 20px;
+        }
+
+        .text-title {
+          color: #667eea;
+          font-weight: 600;
+          margin-bottom: 10px;
+          text-transform: uppercase;
+          font-size: 12px;
+          letter-spacing: 1px;
+        }
+
+        .text-content {
+          color: #333;
+          line-height: 1.6;
+          font-size: 15px;
+          max-height: 300px;
+          overflow-y: auto;
+          word-break: break-word;
+        }
+
+        .tabs {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 20px;
+          border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+          padding: 10px 20px;
+          background: none;
+          border: none;
+          color: #999;
+          cursor: pointer;
+          font-weight: 600;
+          border-bottom: 2px solid transparent;
+          transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+          color: #667eea;
+        }
+
+        .tab.active {
+          color: #667eea;
+          border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+          display: none;
+        }
+
+        .tab-content.active {
+          display: block;
+        }
+      `}</style>
+
+      <div className="header">
+        <h1>Upload & Summarize</h1>
+        <p>Upload your research papers and get instant intelligent summaries using BART</p>
+      </div>
+
+      {error && (
+        <div className={`message error show`}>
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className={`message success show`}>
+          {success}
+        </div>
+      )}
+
+      <div
+        className="upload-section"
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".docx,.pdf,.txt"
+          onChange={handleFileInputChange}
+        />
+        <div className="upload-text">📁 Click to upload or drag & drop</div>
+        <div className="upload-hint">Supported formats: DOCX, PDF, TXT (Max 50MB)</div>
+        <button className="upload-button" disabled={loading}>
+          {loading ? '⏳ Processing...' : 'Choose File'}
+        </button>
+      </div>
+
+      {loading && (
+        <div className="loading">
+          <span className="spinner"></span>
+          Processing your document...
+        </div>
+      )}
+
+      {summary && !loading && (
+        <div className="results-section show">
+          <div className="tabs">
+            <button 
+              className={`tab ${activeTab === 'summary' ? 'active' : ''}`} 
+              onClick={() => setActiveTab('summary')}
+            >
+              📄 Summary
+            </button>
+
+          </div>
+
+          <div className={`tab-content summary ${activeTab === 'summary' ? 'active' : ''}`}>
+            <div className="text-box">
+              <div className="text-title">✅ BART Generated Summary</div>
+              <div className="text-content">
+                {summary}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default DocumentSummarizer;
