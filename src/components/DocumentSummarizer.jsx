@@ -19,7 +19,6 @@ export function DocumentSummarizer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [stats, setStats] = useState(null);
   const [fileName, setFileName] = useState('');
   const [activeTab, setActiveTab] = useState('summary');
   const fileInputRef = useRef(null);
@@ -36,7 +35,6 @@ export function DocumentSummarizer() {
     setSuccess('');
     setSummary('');
     setExtractedText('');
-    setStats(null);
     setFileName(file.name);
 
     try {
@@ -69,11 +67,6 @@ export function DocumentSummarizer() {
       // Step 5: Display results
       setExtractedText(result.extracted_text);
       setSummary(result.summary);
-      setStats({
-        originalLength: result.original_length,
-        summaryLength: result.summary_length,
-        compressionRatio: result.compression_ratio
-      });
 
       // Step 6: Save document to app store for Q&A (but truncate extracted_text to prevent localStorage overflow)
       // CRITICAL: Do NOT store full extracted_text in localStorage (could be 50KB+, exceeds quota)
@@ -90,7 +83,6 @@ export function DocumentSummarizer() {
         summary: result.summary,
         uploadedAt: new Date().toISOString(),
         originalLength: result.original_length,
-        summaryLength: result.summary_length,
         textTruncated: result.extracted_text_truncated || false,
       };
 
@@ -318,35 +310,6 @@ export function DocumentSummarizer() {
           word-break: break-word;
         }
 
-        .stats {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 15px;
-          margin-top: 20px;
-        }
-
-        .stat-box {
-          background: #fff;
-          border: 1px solid #e0e0e0;
-          padding: 15px;
-          border-radius: 6px;
-          text-align: center;
-        }
-
-        .stat-value {
-          color: #667eea;
-          font-size: 24px;
-          font-weight: bold;
-          margin-bottom: 5px;
-        }
-
-        .stat-label {
-          color: #666;
-          font-size: 12px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
         .tabs {
           display: flex;
           gap: 10px;
@@ -446,23 +409,6 @@ export function DocumentSummarizer() {
               </div>
             </div>
           </div>
-
-          {stats && (
-            <div className="stats">
-              <div className="stat-box">
-                <div className="stat-value">{stats.originalLength.toLocaleString()}</div>
-                <div className="stat-label">Original Characters</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-value">{stats.summaryLength.toLocaleString()}</div>
-                <div className="stat-label">Summary Characters</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-value">{stats.compressionRatio.toFixed(2)}%</div>
-                <div className="stat-label">Compression Rate</div>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
