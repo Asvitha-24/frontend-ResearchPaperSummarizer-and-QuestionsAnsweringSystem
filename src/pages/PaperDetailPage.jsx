@@ -4,9 +4,11 @@ import Header from '../components/Header';
 import Chatbot from '../components/Chatbot';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
-import { getPaperById, summarizePaper } from '../services/api';
 import { validatePaperId } from '../utils/validators';
 import '../styles/PaperDetailPage.css';
+
+// Note: This page is part of the legacy search feature which has been removed
+// The /paper/:paperId route is no longer accessible from the main UI
 
 const PaperDetailPage = () => {
   const { paperId } = useParams();
@@ -18,42 +20,16 @@ const PaperDetailPage = () => {
 
   useEffect(() => {
     const fetchPaper = async () => {
-      setLoading(true);
-      setError('');
-
-      const validation = validatePaperId(paperId);
-      if (!validation.isValid) {
-        setError(validation.error);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const result = await getPaperById(paperId);
-        setPaper(result);
-      } catch (err) {
-        setError(err.message || 'Failed to load paper');
-      } finally {
-        setLoading(false);
-      }
+      setLoading(false);
+      setError('This feature has been removed. The semantic search functionality is no longer available. Please use the Upload & Summarize or Ask Questions features instead.');
     };
 
     fetchPaper();
   }, [paperId]);
 
   const handleSummarize = async () => {
-    setSummarizing(true);
-    setError('');
-
-    try {
-      // Call the API to generate summary
-      await summarizePaper(paperId, paper.content || paper.text);
-      // Navigate to summary page
-      navigate(`/summary/${paperId}`, { state: { paper } });
-    } catch (err) {
-      setError(err.message || 'Failed to summarize paper');
-      setSummarizing(false);
-    }
+    // This feature is no longer available
+    alert('This feature has been removed. Please use the Upload & Summarize page instead.');
   };
 
   const handleRetry = () => {

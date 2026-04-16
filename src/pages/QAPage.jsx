@@ -167,11 +167,6 @@ Machine learning applications include image recognition, natural language proces
               📄 Load Sample Document
             </Button>
           )}
-          {documents.length > 0 && (
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              <span>📚 {documents.length} document(s) loaded</span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -213,30 +208,6 @@ Machine learning applications include image recognition, natural language proces
               </div>
             )}
 
-            {/* Related Questions */}
-            {answer && (
-              <Card className="mt-8">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Suggested Follow-up Questions
-                </h3>
-                <div className="space-y-2">
-                  {[
-                    'Can you elaborate on the methodology?',
-                    'What are the main limitations?',
-                    'How does this compare to related work?',
-                    'What are the future directions?',
-                  ].map((suggestion, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleAskQuestion(suggestion, documents[0].id, 'full')}
-                      className="w-full text-left p-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors text-gray-900 dark:text-white text-sm"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              </Card>
-            )}
           </div>
 
           {/* QA History Sidebar */}

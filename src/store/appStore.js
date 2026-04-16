@@ -40,11 +40,6 @@ const appStore = (set) => ({
     })),
   setQAResults: (qaResults) => set({ qaResults }),
 
-  // Search Results
-  searchResults: [],
-  setSearchResults: (searchResults) => set({ searchResults }),
-  clearSearchResults: () => set({ searchResults: [] }),
-
   // Loading & Error
   loading: false,
   setLoading: (loading) => set({ loading }),
@@ -102,7 +97,6 @@ const appStore = (set) => ({
       documents: [],
       summaries: {},
       qaResults: [],
-      searchResults: [],
       loading: false,
       error: null,
       selectedPaper: null,

@@ -133,57 +133,6 @@ export const getQAHistory = async (documentId) => {
   }
 };
 
-// ==================== SEARCH ====================
-
-/**
- * Search across documents
- */
-export const searchDocuments = async (query, filters = {}) => {
-  try {
-    const response = await apiClient.get('/search', {
-      params: {
-        q: query,
-        dateFrom: filters.dateFrom,
-        dateTo: filters.dateTo,
-        relevanceThreshold: filters.relevanceThreshold || 0,
-        category: filters.category,
-        sortBy: filters.sortBy || 'relevance',
-        limit: filters.limit || 20,
-        offset: filters.offset || 0,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to search documents');
-  }
-};
-
-/**
- * Legacy search papers endpoint
- */
-export const searchPapers = async (query) => {
-  try {
-    const response = await apiClient.get('/papers/search', {
-      params: { q: query },
-    });
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to search papers');
-  }
-};
-
-/**
- * Get paper by ID
- */
-export const getPaperById = async (paperId) => {
-  try {
-    const response = await apiClient.get(`/papers/${paperId}`);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch paper');
-  }
-};
-
 // ==================== HISTORY & SAVED RESULTS ====================
 
 /**
@@ -285,19 +234,6 @@ export const exportHistoryAsCSV = async (historyIds) => {
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to export as CSV');
-  }
-};
-
-// Summarization Service
-export const summarizePaper = async (paperId, content) => {
-  try {
-    const response = await apiClient.post('/summarize', {
-      paper_id: paperId,
-      content: content,
-    });
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to summarize paper');
   }
 };
 

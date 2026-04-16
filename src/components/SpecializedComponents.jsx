@@ -182,7 +182,10 @@ export const SummaryDisplay = ({ summary, originalText, metrics, onCopy, onDownl
  */
 export const QAInterface = ({ onAskQuestion, loading = false, documents = [] }) => {
   const [question, setQuestion] = React.useState('');
-  const [selectedDoc, setSelectedDoc] = React.useState(documents[0]?.id || '');
+  
+  // Filter documents with content and set initial selection
+  const documentsWithContent = documents.filter((doc) => doc.extracted_text || doc.content || doc.text);
+  const [selectedDoc, setSelectedDoc] = React.useState(documentsWithContent[0]?.id || '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -193,7 +196,7 @@ export const QAInterface = ({ onAskQuestion, loading = false, documents = [] }) 
   };
 
   // **LOOPHOLE FIX #4: Check if selected document has content**
-  const selectedDocument = documents.find(d => d.id === selectedDoc);
+  const selectedDocument = documentsWithContent.find(d => d.id === selectedDoc);
   const selectedDocHasContent = selectedDocument && (selectedDocument.extracted_text || selectedDocument.content || selectedDocument.text);
   const isButtonDisabled = !question.trim() || !selectedDocHasContent || loading;
 
@@ -213,13 +216,14 @@ export const QAInterface = ({ onAskQuestion, loading = false, documents = [] }) 
                 onChange={(e) => setSelectedDoc(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md"
               >
-                {documents.map((doc) => {
+                {documents
+                  .filter((doc) => doc.extracted_text || doc.content || doc.text)
+                  .map((doc) => {
                   const hasContent = doc.extracted_text || doc.content || doc.text;
                   const contentLength = (hasContent?.length || 0);
-                  const status = hasContent ? `✅ (${contentLength} chars)` : '❌ (No content)';
                   return (
                     <option key={doc.id} value={doc.id}>
-                      {(doc.title || doc.name || 'Untitled')} {status}
+                      {(doc.title || doc.name || 'Untitled')} ✅ ({contentLength} chars)
                     </option>
                   );
                 })}
