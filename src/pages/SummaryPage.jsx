@@ -4,8 +4,10 @@ import Header from '../components/Header';
 import Chatbot from '../components/Chatbot';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
-import { getPaperById } from '../services/api';
 import '../styles/SummaryPage.css';
+
+// Note: This page is part of the legacy search feature which has been removed
+// The /summary/:paperId route is no longer accessible from the main UI
 
 const SummaryPage = () => {
   const { paperId } = useParams();
@@ -17,29 +19,9 @@ const SummaryPage = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!paper) {
-      const fetchPaper = async () => {
-        setLoading(true);
-        setError('');
-
-        try {
-          const result = await getPaperById(paperId);
-          setPaper(result);
-          // In a real app, fetch the summary from the backend
-          setSummary(result.summary || 'Summary not available yet.');
-        } catch (err) {
-          setError(err.message || 'Failed to load paper');
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchPaper();
-    } else {
-      // Simulate loading summary
-      setSummary(paper.summary || 'Summary generated using BART model...');
-    }
-  }, [paper, paperId]);
+    setLoading(false);
+    setError('This feature has been removed. The semantic search functionality is no longer available. Please use the Upload & Summarize or Ask Questions features instead.');
+  }, [paperId]);
 
   const handleRetry = () => {
     window.location.reload();

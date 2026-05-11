@@ -6,10 +6,10 @@ import { useDarkMode } from './hooks';
 
 // Pages
 import HomePage from './pages/HomePage';
-import SearchPage from './pages/SearchPage';
+
 import UploadSummarizePage from './pages/UploadSummarizePage';
 import QAPage from './pages/QAPage';
-import HistoryPage from './pages/HistoryPage';
+
 import PaperDetailPage from './pages/PaperDetailPage';
 import SummaryPage from './pages/SummaryPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -35,10 +35,8 @@ function App() {
           <Routes>
             {/* Main Routes */}
             <Route path="/" element={<HomePage />} />
-            <Route path="/search" element={<SearchPage />} />
             <Route path="/upload" element={<UploadSummarizePage />} />
             <Route path="/qa" element={<QAPage />} />
-            <Route path="/history" element={<HistoryPage />} />
 
             {/* Legacy Routes */}
             <Route path="/paper/:paperId" element={<PaperDetailPage />} />

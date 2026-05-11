@@ -4,14 +4,17 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 60000,  // Increased to 60 seconds for heavy operations like summarization
 });
 
 // Add interceptor for error handling
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ API Response:', response.config.url, response.status);
+    return response;
+  },
   (error) => {
-    console.error('API Error:', error);
+    console.error('❌ API Error:', error.config?.url, error.message, error.response?.status);
     throw error;
   }
 );
@@ -76,19 +79,34 @@ export const deleteDocument = async (documentId) => {
 // ==================== SUMMARIZATION ====================
 
 /**
- * Generate summary for a document
+ * Generate summary for text content
+ * @param {string} text - The text to summarize
+ * @param {object} options - Options (maxLength, minLength)
  */
-export const generateSummary = async (documentId, options = {}) => {
+export const generateSummary = async (text, options = {}) => {
   try {
-    const response = await apiClient.post(`/summarize`, {
-      documentId,
-      maxLength: options.maxLength || 200,
-      minLength: options.minLength || 50,
-      style: options.style || 'abstractive',
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      throw new Error('Text content is required for summarization');
+    }
+
+    const payload = {
+      text: text.trim(),
+      max_length: options.maxLength || 150,
+      min_length: options.minLength || 50,
+    };
+
+    console.log('📤 Sending to /summarize:', { 
+      textLength: payload.text.length, 
+      maxLength: payload.max_length,
+      minLength: payload.min_length 
     });
+
+    const response = await apiClient.post(`/summarize`, payload);
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to generate summary');
+    const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to generate summary';
+    console.error('❌ Summary API error:', errorMsg);
+    throw new Error(errorMsg);
   }
 };
 
@@ -107,18 +125,62 @@ export const getSummary = async (documentId) => {
 // ==================== QUESTION ANSWERING ====================
 
 /**
- * Ask a question about a document
+ * Ask a question about document content
+ * @param {string} question - The question to ask
+ * @param {string} context - The document content/context to answer from
  */
-export const askQuestion = async (documentId, question, useContext = 'full') => {
+export const askQuestionAboutContent = async (question, context) => {
   try {
-    const response = await apiClient.post(`/question-answer`, {
-      documentId,
-      question,
-      context: useContext, // 'full' or 'summary'
+    if (!question || typeof question !== 'string' || question.trim().length === 0) {
+      throw new Error('Question is required');
+    }
+    if (!context || typeof context !== 'string' || context.trim().length === 0) {
+      throw new Error('Document context is required');
+    }
+
+    console.log('📤 Asking question to /answer endpoint:', {
+      questionLength: question.length,
+      contextLength: context.length,
+    });
+
+    const response = await apiClient.post(`/answer`, {
+      question: question.trim(),
+      context: context.trim(),
     });
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to answer question');
+    const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to answer question';
+    console.error('❌ Q&A API error:', errorMsg);
+    throw new Error(errorMsg);
+  }
+};
+
+/**
+ * Ask a question about a document using the /answer endpoint
+ */
+export const askQuestion = async (documentId, question, documentContent) => {
+  try {
+    if (!question || typeof question !== 'string' || question.trim().length === 0) {
+      throw new Error('Question is required');
+    }
+    if (!documentContent || typeof documentContent !== 'string' || documentContent.trim().length === 0) {
+      throw new Error('Document content is required');
+    }
+
+    console.log('📤 Calling /answer endpoint:', {
+      questionLength: question.length,
+      contentLength: documentContent.length,
+    });
+
+    const response = await apiClient.post(`/answer`, {
+      question: question.trim(),
+      context: documentContent.trim(),
+    });
+    return response.data;
+  } catch (error) {
+    const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to answer question';
+    console.error('❌ Q&A API error:', errorMsg);
+    throw new Error(errorMsg);
   }
 };
 
@@ -131,57 +193,6 @@ export const getQAHistory = async (documentId) => {
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch Q&A history');
-  }
-};
-
-// ==================== SEARCH ====================
-
-/**
- * Search across documents
- */
-export const searchDocuments = async (query, filters = {}) => {
-  try {
-    const response = await apiClient.get('/search', {
-      params: {
-        q: query,
-        dateFrom: filters.dateFrom,
-        dateTo: filters.dateTo,
-        relevanceThreshold: filters.relevanceThreshold || 0,
-        category: filters.category,
-        sortBy: filters.sortBy || 'relevance',
-        limit: filters.limit || 20,
-        offset: filters.offset || 0,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to search documents');
-  }
-};
-
-/**
- * Legacy search papers endpoint
- */
-export const searchPapers = async (query) => {
-  try {
-    const response = await apiClient.get('/papers/search', {
-      params: { q: query },
-    });
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to search papers');
-  }
-};
-
-/**
- * Get paper by ID
- */
-export const getPaperById = async (paperId) => {
-  try {
-    const response = await apiClient.get(`/papers/${paperId}`);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch paper');
   }
 };
 
@@ -286,19 +297,6 @@ export const exportHistoryAsCSV = async (historyIds) => {
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to export as CSV');
-  }
-};
-
-// Summarization Service
-export const summarizePaper = async (paperId, content) => {
-  try {
-    const response = await apiClient.post('/summarize', {
-      paper_id: paperId,
-      content: content,
-    });
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to summarize paper');
   }
 };
 
