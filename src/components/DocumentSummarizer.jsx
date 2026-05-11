@@ -308,6 +308,7 @@ export function DocumentSummarizer() {
           max-height: 300px;
           overflow-y: auto;
           word-break: break-word;
+          white-space: pre-wrap;
         }
 
         .tabs {
